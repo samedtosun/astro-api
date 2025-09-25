@@ -2,7 +2,7 @@
 from fastapi import FastAPI, Form, HTTPException, Header
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
-from kerykeion import KrInstance, MakeSvgInstance
+from kerykeion import AstrologicalSubject, KerykeionSvg
 import os
 import tempfile
 import logging
