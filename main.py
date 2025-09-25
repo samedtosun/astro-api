@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI, Form, HTTPException, Header
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,12 +6,10 @@ import os
 import tempfile
 import logging
 
-# Log seviyesini düşür
 logging.getLogger("kerykeion").setLevel(logging.WARNING)
 
 app = FastAPI(title="Gizli Doğum Haritası API")
 
-# CORS: Flutter mobile için gerekli
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,12 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Gizli API anahtarı (Render'da ayarlanacak)
-SECRET_API_KEY = os.getenv("API_KEY", "default-secret-key-for-local-testing")
+SECRET_API_KEY = os.getenv("API_KEY", "test-key")
 
 @app.get("/")
 def home():
-    return {"status": "OK", "message": "Bu API sadece yetkili kullanıcılar içindir."}
+    return {"status": "OK", "message": "API çalışıyor."}
 
 @app.post("/generate_chart")
 async def generate_chart(
@@ -41,17 +37,31 @@ async def generate_chart(
     nation: str = Form("TR")
 ):
     if api_key != SECRET_API_KEY:
-        raise HTTPException(status_code=403, detail="Erişim reddedildi")
+        raise HTTPException(status_code=403, detail="Geçersiz API anahtarı")
     
     try:
-        person = KrInstance(name, year, month, day, hour, minute, city, nation)
+        # Yeni sınıf adı: AstrologicalSubject
+        person = AstrologicalSubject(
+            name=name,
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            city=city,
+            nation=nation
+        )
+        
         with tempfile.TemporaryDirectory() as tmpdir:
-            svg = MakeSvgInstance(person, chart_type="Natal", new_output_directory=tmpdir)
-            svg.makeSVG()
-            file_path = os.path.join(tmpdir, svg.output_filename)
+            # Yeni sınıf: KerykeionSvg
+            svg = KerykeionSvg(
+                person,
+                chart_type="Natal",
+                new_output_directory=tmpdir
+            )
+            svg.make_svg()  # dikkat: make_svg(), makeSVG() değil!
             
-            if not os.path.exists(file_path):
-                raise HTTPException(status_code=500, detail="SVG oluşturulamadı")
+            file_path = svg.output_filepath  # output_filepath, filename değil
             
             with open(file_path, "r", encoding="utf-8") as f:
                 svg_content = f.read()
