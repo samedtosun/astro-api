@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Form, HTTPException, Header
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
-from kerykeion import AstrologicalSubject, KerykeionSvg
+from kerykeion.core import AstrologicalSubject
+from kerykeion.svg_classes import KerykeionSvg
 import os
 import tempfile
 import logging
@@ -40,7 +41,6 @@ async def generate_chart(
         raise HTTPException(status_code=403, detail="Geçersiz API anahtarı")
     
     try:
-        # Yeni sınıf adı: AstrologicalSubject
         person = AstrologicalSubject(
             name=name,
             year=year,
@@ -53,15 +53,13 @@ async def generate_chart(
         )
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Yeni sınıf: KerykeionSvg
             svg = KerykeionSvg(
                 person,
                 chart_type="Natal",
                 new_output_directory=tmpdir
             )
-            svg.make_svg()  # dikkat: make_svg(), makeSVG() değil!
-            
-            file_path = svg.output_filepath  # output_filepath, filename değil
+            svg.make_svg()
+            file_path = svg.output_filepath
             
             with open(file_path, "r", encoding="utf-8") as f:
                 svg_content = f.read()
